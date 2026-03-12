@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import threading
@@ -46,7 +47,10 @@ class OSSHandler(BaseHandler, EnforceOverrides):
         # Use REMOTE_OPENAI_* variables to avoid conflicts with main OPENAI_* variables
         self.base_url = os.getenv("REMOTE_OPENAI_BASE_URL", f"http://{self.local_server_endpoint}:{self.local_server_port}/v1")
         self.api_key = os.getenv("REMOTE_OPENAI_API_KEY", "EMPTY")
-        self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+        client_kwargs = dict(base_url=self.base_url, api_key=self.api_key)
+        if headers_env := os.getenv("OPENAI_DEFAULT_HEADERS"):
+            client_kwargs["default_headers"] = json.loads(headers_env)
+        self.client = OpenAI(**client_kwargs)
 
     @override
     def inference(
@@ -256,7 +260,12 @@ class OSSHandler(BaseHandler, EnforceOverrides):
                     )
                 try:
                     # Make a simple request to check if the server is up
-                    response = requests.get(f"{self.base_url}/models")
+                    readiness_headers = {}
+                    if self.api_key and self.api_key != "EMPTY":
+                        readiness_headers["Authorization"] = f"Bearer {self.api_key}"
+                    if headers_env := os.getenv("OPENAI_DEFAULT_HEADERS"):
+                        readiness_headers.update(json.loads(headers_env))
+                    response = requests.get(f"{self.base_url}/models", headers=readiness_headers)
                     if response.status_code == 200:
                         server_ready = True
                         print("server is ready!")
