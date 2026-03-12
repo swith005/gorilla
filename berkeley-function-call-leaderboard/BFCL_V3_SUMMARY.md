@@ -64,7 +64,7 @@ response = requests.get(f"{self.base_url}/models", headers=readiness_headers)
 
 **Environment Config** (`.env`):
 ```
-REMOTE_OPENAI_BASE_URL=https://inference-3scale-apicast-production.apps.rits.fmaas.res.ibm.com/granite-4-h-micro/v1
+REMOTE_OPENAI_BASE_URL=<URL>
 REMOTE_OPENAI_API_KEY=<your-rits-api-key>
 OPENAI_DEFAULT_HEADERS={"RITS_API_KEY": "<your-rits-api-key>"}
 ```
